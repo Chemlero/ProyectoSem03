@@ -21,8 +21,4 @@ async function connectDB() {
   }
 }
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 module.exports = { connectDB };

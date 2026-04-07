@@ -1,22 +1,58 @@
-form = document.querySelector("form");
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const querystring = require('querystring');
+const { insertarVenta } = require('./Crud/Crear');
 
-form.querySelector("#calculate").addEventListener("click", function (e) {
-  e.preventDefault();
-  total = document.querySelector("#total");
-  total.textContent = (parseFloat(form.querySelector("#count").value) * parseFloat(form.querySelector("#precio").value));
+const server = http.createServer(async (req, res) => {
+  if (req.method === 'GET' && req.url === '/') {
+    fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
+      if (err) {
+        res.writeHead(500);
+        res.end('Error interno del servidor');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    });
+  } else if (req.method === 'GET' && req.url === '/style.css') {
+    fs.readFile(path.join(__dirname, 'style.css'), (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end('No encontrado');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/css' });
+      res.end(data);
+    });
+  } else if (req.method === 'POST' && req.url === '/submit') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', async () => {
+      const datos = querystring.parse(body);
+      try {
+        const id = await insertarVenta({
+          cliente: datos.cliente,
+          producto: datos.producto,
+          cantidad: parseInt(datos.cantidad),
+          precio: parseFloat(datos.precio)
+        });
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end(`Venta insertada con ID: ${id}`);
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Error al insertar venta');
+      }
+    });
+  } else {
+    res.writeHead(404);
+    res.end('Página no encontrada');
+  }
 });
 
-form.querySelector("#count").addEventListener("input", function (e) {
-  total = document.querySelector("#count-value");
-  total.textContent = (parseFloat(form.querySelector("#count").value));
-});
-
-form.querySelector("#precio").addEventListener("input", function (e) {
-  total = document.querySelector("#precio-value");
-  total.textContent = (parseFloat(form.querySelector("#precio").value));
-});
-
-form.addEventListener("submit").addEventListener("click", function (e) {
-  e.preventDefault();
-  alert("Solicitando producto: " + form.querySelector("#producto").value);
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
