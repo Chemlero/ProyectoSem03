@@ -23,7 +23,7 @@ async function eliminarVenta(id) {
         return { success: true, mensaje: "Venta eliminada correctamente." };
     } catch (err) {
         console.error("Error al eliminar:", err);
-        return { success: false, mensaje: "Error interno al eliminar." };
+        return { success: false, mensaje: "Error interno al eliminar" };
     } finally {
         if (connection) {
             await connection.end();
